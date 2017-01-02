@@ -29,18 +29,21 @@ class Overlay extends Component {
   }
 
   componentWillUpdate (nextProps) {
-    if (this.props.lockScroll) {
-      const becomingActive = nextProps.active && !this.props.active;
-      const becomingUnactive = !nextProps.active && this.props.active;
-
-      if (becomingActive) {
-        document.body.style.overflow = 'hidden';
-      }
-
-      if (becomingUnactive && !document.querySelectorAll('[data-react-toolbox="overlay"]')[1]) {
-        document.body.style.overflow = '';
-      }
+    if (this.props.active) {
+      this.escKeyListener = document.body.addEventListener('keydown', this.handleEscKey.bind(this));
+      document.body.style.overflow = 'hidden';
     }
+  }
+
+  componentWillUpdate (nextProps) {
+    if (nextProps.active && !this.props.active) {
+      document.body.setAttribute('aria-hidden', true);
+      document.body.style.overflow = 'hidden';
+    } 
+    if (!nextProps.active && this.props.active) {
+      document.body.setAttribute('aria-hidden', false);
+      document.body.style.overflow = null;
+    } 
   }
 
   componentDidUpdate (prevProps) {
