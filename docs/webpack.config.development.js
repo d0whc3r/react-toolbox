@@ -39,7 +39,12 @@ module.exports = {
     }, {
       test: /\.css$/,
       include: [path.resolve(__dirname, './app'), path.resolve(__dirname + './../components')],
-      loader: ExtractTextPlugin.extract('style', 'css?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss')
+      loaders: [
+        'style-loader',
+        'css-loader?importLoaders=1',
+        'postcss-loader'
+      ]
+      // loader: ExtractTextPlugin.extract('style', 'css?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss')
     }, {
       test: /\.txt$/,
       include: path.resolve(__dirname, './app/components/layout/main/modules'),
@@ -52,24 +57,24 @@ module.exports = {
   },
   postcss (webpackInstance) {
     return [
-      require('postcss-import')({
-        addDependencyTo: webpackInstance,
-        root: path.join(__dirname, './../'),
-        path: [
-          path.join(__dirname, './app'),
-          path.join(__dirname, './../components')
-        ]
-      }),
-      require('postcss-mixins')(),
-      require('postcss-each')(),
+      // require('postcss-import')({
+      //   addDependencyTo: webpackInstance,
+      //   root: path.join(__dirname, './../'),
+      //   path: [
+      //     path.join(__dirname, './app'),
+      //     path.join(__dirname, './../components')
+      //   ]
+      // }),
+      // require('postcss-mixins')(),
+      // require('postcss-each')(),
       require('postcss-cssnext')({
         features: {
           customProperties: {
             variables: toolboxVariables
           }
         }
-      }),
-      require('postcss-reporter')({ clearMessages: true })
+      })
+      // require('postcss-reporter')({ clearMessages: true })
     ];
   },
   plugins: [

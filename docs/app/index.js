@@ -2,7 +2,7 @@ import 'react-toolbox/commons.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Router, Route, useRouterHistory } from 'react-router';
-import createHashHistory from 'history/lib/createHashHistory';
+import createHashHistory from 'history/createHashHistory';
 import Home from './components/layout/home';
 import Install from './components/layout/install';
 import Main from './components/layout/main';
