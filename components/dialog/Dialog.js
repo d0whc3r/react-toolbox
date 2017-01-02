@@ -1,156 +1,82 @@
-import React, { Component, PropTypes } from 'react';
+import React, { PropTypes } from 'react';
 import { themr } from 'react-css-themr';
 import classnames from 'classnames';
 import { DIALOG } from '../identifiers.js';
-import Button from '../button/Button.js';
-import Overlay from '../overlay/Overlay.js';
+import Portal from '../hoc/Portal.js';
+import ActivableRenderer from '../hoc/ActivableRenderer.js';
+import InjectButton from '../button/Button.js';
+import InjectOverlay from '../overlay/Overlay.js';
 
+const factory = (Overlay, Button) => {
+  const Dialog = (props) => {
+    const actions = props.actions.map((action, idx) => {
+      const className = classnames(props.theme.button, {[action.className]: action.className});
+      return <Button key={idx} {...action} className={className} />;
+    });
 
-var factory = function factory(Overlay, Button) {
+    const className = classnames([props.theme.dialog, props.theme[props.type]], {
+      [props.theme.active]: props.active
+    }, props.className);
 
-  class Dialog extends Component {
-    static propTypes = {
-      actions: PropTypes.array,
-      active: PropTypes.bool,
-      children: PropTypes.node,
-      className: PropTypes.string,
-      onEscKeyDown: PropTypes.func,
-      onOverlayClick: PropTypes.func,
-      onOverlayMouseDown: PropTypes.func,
-      onOverlayMouseMove: PropTypes.func,
-      onOverlayMouseUp: PropTypes.func,
-      theme: PropTypes.shape({
-        active: PropTypes.string,
-        body: PropTypes.string,
-        button: PropTypes.string,
-        dialog: PropTypes.string,
-        navigation: PropTypes.string,
-        title: PropTypes.string
-      }),
-      title: PropTypes.string,
-      type: PropTypes.string
-    };
-
-    static defaultProps = {
-      actions: [],
-      active: false,
-      previousFocus: null,
-      type: 'normal',
-      // Elements that can be focused even if they have [disabled] attribute.
-      FOCUSABLE_WITH_DISABLED: [
-        'a[href]',
-        'area[href]',
-        'iframe',
-        '[tabindex]',
-        '[contentEditable=true]'
-      ],
-      // Elements that cannot be focused if they have [disabled] attribute.
-      FOCUSABLE_WITHOUT_DISABLED: [
-        'input',
-        'select',
-        'textarea',
-        'button'
-      ]
-    };
-
-    getSelector(tabIdx) {
-      if(tabIdx === '0') {
-        return this.props.FOCUSABLE_WITH_DISABLED.join('[tabindex="-1"],') + '[tabindex="-1"],' + this.props.FOCUSABLE_WITHOUT_DISABLED.join(':not([disabled])[tabindex="-1"],') + ':not([disabled])[tabindex="-1"]';
-      } else {
-        return this.props.FOCUSABLE_WITH_DISABLED.join(':not([tabindex="-1"]),') + ':not([tabindex="-1"]),' + this.props.FOCUSABLE_WITHOUT_DISABLED.join(':not([disabled]):not([tabindex="-1"]),') + ':not([disabled]):not([tabindex="-1"])';
-      }
-    }
-
-    trapFocus(obj, tabIdx) {
-
-      const selector = this.getSelector(tabIdx);
-      const focusables = Array.prototype.slice.call(obj.querySelectorAll(selector));
-      const focusablesInDialog = Array.prototype.slice.call(this.refs.dialog.querySelectorAll(selector)); 
-
-      const filtered = focusables.filter(function(value){
-        return !focusablesInDialog.includes(value);
-      });
-
-      const len = filtered.length;
-
-      for(var i = 0; i < len; i++) {
-        this.setTabIndex(filtered[i], tabIdx);
-      }
-    }
-
-    setTabIndex(obj, tabIdx) {
-      obj.setAttribute('tabindex', tabIdx);
-    }
-
-    componentWillUpdate (nextProps) {
-      // open
-      if (nextProps.active && !this.props.active) {
-        this.trapFocus(document.body, '-1');
-        this.refs.dialog.setAttribute('aria-hidden', false);
-        this.refs.dialog.parentNode.addEventListener('transitionend', function(event) {
-          if(event.target.parentNode === this.refs.dialog.parentNode) {
-            this.refs.dialog.focus();
-          }
-        }.bind(this));
-      } 
-      // close
-      if (!nextProps.active && this.props.active) {
-        this.trapFocus(document.body, '0');
-        this.refs.dialog.setAttribute('aria-hidden', true);
-        this.refs.dialog.parentNode.addEventListener('transitionend', function(event) {
-          if(event.target.parentNode === this.refs.dialog.parentNode && this.props.previousFocus) {
-            this.props.previousFocus.focus();
-          }
-        }.bind(this));
-        
-      } 
-
-    }
-
-    render () {
-      const actions = this.props.actions.map((action, idx) => {
-        const className = classnames(this.props.theme.button, {[action.className]: action.className});
-        return <Button key={idx} {...action} className={className} />;
-      });
-
-      const className = classnames([this.props.theme.dialog, this.props.theme[this.props.type]], {
-        [this.props.theme.active]: this.props.active
-      }, this.props.className);
-
-      return (
+    return (
+      <Portal className={props.theme.wrapper}>
         <Overlay
-          active={this.props.active}
-          onClick={this.props.onOverlayClick}
-          onEscKeyDown={this.props.onEscKeyDown}
-          onMouseDown={this.props.onOverlayMouseDown}
-          onMouseMove={this.props.onOverlayMouseMove}
-          onMouseUp={this.props.onOverlayMouseUp}
-        >
-          <div data-react-toolbox='dialog' ref='dialog' role='dialog' aria-hidden="true" tabIndex="-1" className={className}>
-            <section role='body' className={this.props.theme.body}>
-              {this.props.title ? <h6 className={this.props.theme.title}>{this.props.title}</h6> : null}
-              {this.props.children}
-            </section>
-            {actions.length
-              ? <nav role='navigation' className={this.props.theme.navigation}>
-                  {actions}
-                </nav>
-              : null
-            }
-          </div>
-        </Overlay>
-      );
-    }
+          active={props.active}
+          onClick={props.onOverlayClick}
+          onEscKeyDown={props.onEscKeyDown}
+          onMouseDown={props.onOverlayMouseDown}
+          onMouseMove={props.onOverlayMouseMove}
+          onMouseUp={props.onOverlayMouseUp}
+        />
+        <div data-react-toolbox='dialog' className={className}>
+          <section role='body' className={props.theme.body}>
+            {props.title ? <h6 className={props.theme.title}>{props.title}</h6> : null}
+            {props.children}
+          </section>
+          {actions.length
+            ? <nav role='navigation' className={props.theme.navigation}>
+                {actions}
+              </nav>
+            : null
+          }
+        </div>
+      </Portal>
+    );
+  };
 
-  }
+  Dialog.propTypes = {
+    actions: PropTypes.array,
+    active: PropTypes.bool,
+    children: PropTypes.node,
+    className: PropTypes.string,
+    onEscKeyDown: PropTypes.func,
+    onOverlayClick: PropTypes.func,
+    onOverlayMouseDown: PropTypes.func,
+    onOverlayMouseMove: PropTypes.func,
+    onOverlayMouseUp: PropTypes.func,
+    theme: PropTypes.shape({
+      active: PropTypes.string,
+      body: PropTypes.string,
+      button: PropTypes.string,
+      dialog: PropTypes.string,
+      navigation: PropTypes.string,
+      title: PropTypes.string,
+      wrapper: PropTypes.string
+    }),
+    title: PropTypes.string,
+    type: PropTypes.string
+  };
 
-  return Dialog;
+  Dialog.defaultProps = {
+    actions: [],
+    active: false,
+    type: 'normal'
+  };
 
-}
+  return ActivableRenderer()(Dialog);
+};
 
-const Dialog = factory(Overlay, Button);
+const Dialog = factory(InjectOverlay, InjectButton);
 export default themr(DIALOG)(Dialog);
 export { Dialog };
 export { factory as dialogFactory };
-
-
